@@ -1,0 +1,21 @@
+srcdir = ..
+builddir = .
+cxx = clang++
+cxxflags = -std=c++2a -g -Wfatal-errors -fmodule-file=module1=$builddir/modules/module1.pcm
+
+rule cxx
+  command = $cxx $cxxflags -c -o $out $in
+  description = CXX $out
+
+rule mxx
+  command = $cxx $cxxflags -Xclang -emit-module-interface -c -o $out $in
+  description = MXX $out
+
+rule link
+  command = $cxx -o $out $in
+  description = LINK $out
+
+build $builddir/modules/module1.pcm: mxx $srcdir/module1.cc
+build $builddir/module1.o: cxx $builddir/modules/module1.pcm
+build $builddir/main.o: cxx $srcdir/main.cc || $builddir/modules/module1.pcm
+build $builddir/exp: link $builddir/module1.o $builddir/main.o
